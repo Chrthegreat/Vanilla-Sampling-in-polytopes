@@ -10,7 +10,7 @@ Running the code is simple. Download all files, create a Python virtual envirome
 
 ** How to test your custom polytopes **
 
-If you check the polytopes.txt file, you will see that each polytope is defined in a specific way. Each polytope is represented by its inequalities in matrix form. First, the name of the polytope, then matrix A (the columns of A define the dimensions), then matrix b and lastly exaclty 10 stars *. To define your own polytopes follow this format exactly. Add 10 * after the last polytope, the a name, then A: followded by the matrix elements split with , and then b: followed by the elemebts. If done right, the polytope will appear in the main menu when you run main. 
+If you check the polytopes.txt file, you will see that each polytope is defined in a specific way. Each polytope is represented by its inequalities in matrix form. First, the name of the polytope, then matrix A (the columns of A define the dimensions), then matrix b and lastly exactly 10 stars *. To define your own polytopes follow this format exactly. Add 10 * after the last polytope, then a name, then A: followded by the matrix elements split with , and then b: followed by the elemebts. If done right, the polytope will appear in the main menu when you run main. 
 
 ** Notes **
 
