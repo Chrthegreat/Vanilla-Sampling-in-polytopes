@@ -1,4 +1,3 @@
-import numpy as np
 import arviz as az
 import time
 import matplotlib.pyplot as plt
@@ -7,7 +6,7 @@ from ball_walk_function import ball_walk
 from Hamilton_function import reflective_hamiltonian_dynamics
 from hit_and_run_function import hit_and_run
 from billiard_walk_function import billiard_walk
-from utils import split_chain, get_user_gradient_choice
+from utils import *
 
 # ----------------------------------------
 # Helper: run a single sampler
@@ -21,6 +20,7 @@ def run_sampling_method(name, func, A, b, **kwargs):
     
     if isinstance(result, tuple):
         samples = result[0]
+        # Only ball walk returns acc_rate
         acc_rate = result[1] if len(result) > 1 else None
     else:
         samples = result
@@ -36,7 +36,8 @@ def run_sampling_method(name, func, A, b, **kwargs):
         print(f"Acceptance rate: {acc_rate:.3f}")
 
     # -----------------------------
-    # Compute PSRF and ESS using split chains
+    # Compute PSRF and ESS.
+    # Instead of running multiple chains we choose to split our one chain in 4 parts randomly.
     # -----------------------------
     all_chains = split_chain(samples, n_splits=4)
     idata = az.from_dict(posterior={"x": all_chains})
@@ -59,15 +60,17 @@ def run_sampling_method(name, func, A, b, **kwargs):
 # Main program
 # ----------------------------------------
 if __name__ == "__main__":
-    # 1) Read A and b from CSV files
-    A = np.loadtxt("A.csv", delimiter=",")
-    b = np.loadtxt("b.csv")
+    # Read Polytopes from the txt file. 
+    # You can add your own polytope, just make sure you keep the format
+    polytopes = load_polytopes_from_file("polytopes.txt")
+    A, b, name = choose_polytope(polytopes)
 
+    # Print A and b to verify the choice
     print("Polytope matrices loaded successfully.")
     print("A =\n", A)
     print("b =\n", b)
 
-    # 2) Ask user which sampler to run
+    # Ask user which sampler to run
     print("\nWhich sampler do you want to run?")
     print("1 - Ball Walk")
     print("2 - Hit-and-Run")
@@ -83,7 +86,7 @@ if __name__ == "__main__":
         print(f"Input error: {e}. Defaulting to 2 (Hit-and-Run).")
         choice = "2"
     
-    # 3) Ask user for number of samples
+    # Ask user for number of samples
     try:
         n_samples = int(input("\nEnter number of samples (default 40000, min 400): ").strip())
         if n_samples < 400:
@@ -108,7 +111,7 @@ if __name__ == "__main__":
         except Exception:
             print("Invalid input. Using default radius 1")
 
-    # 3) Run the selected sampler
+    # Run the selected sampler
     if choice == "1":
         samples = run_sampling_method("Ball Walk", ball_walk, A, b, n_steps = n_samples, r=r)
     elif choice == "2":
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     d = samples.shape[1]
 
     if (d > 1):
-        # 2D scatter
+        # 2D scatter for first two dimensions x1, x2
         plt.figure(figsize=(6, 6))
         plt.scatter(samples[:, 0], samples[:, 1], s=2, alpha=0.5)
         plt.title("Sampler 2D Projection (x1 vs x2)")
@@ -137,7 +140,7 @@ if __name__ == "__main__":
         plt.show()
     
     if (d > 2):
-        # 3D scatter for first three dimensions
+        # 3D scatter for first three dimensions x1, x2, x3
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], s=2, alpha=0.5, color='red')

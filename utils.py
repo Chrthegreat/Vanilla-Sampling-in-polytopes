@@ -104,3 +104,96 @@ def get_user_gradient_choice():
 
     print(f"Gradient option {choice} selected.\n")
     return grad_f
+
+
+
+def load_polytopes_from_file(filename):
+    """
+    Load polytopes from a text file with the following format:
+
+    Polytope Name
+    A:
+    ...rows of A matrix, comma-separated...
+    b:
+    ...rows of b vector, one number per line...
+    ****************************************
+    """
+    with open(filename, "r") as f:
+        content = f.read()
+
+    blocks = content.split("*" * 10)
+    polytopes = []
+
+    for block in blocks:
+        lines = [line.strip() for line in block.splitlines() if line.strip()]
+        if not lines:
+            continue
+        name = lines[0]
+        A_lines = []
+        b_lines = []
+        reading_A = False
+        reading_b = False
+
+        for line in lines[1:]:
+            if line.upper() == "A:":
+                reading_A = True
+                reading_b = False
+                continue
+            elif line.upper() == "B:":
+                reading_A = False
+                reading_b = True
+                continue
+
+            if reading_A:
+                A_lines.append(line)
+            elif reading_b:
+                b_lines.append(line)
+
+        if not A_lines or not b_lines:
+            print(f"Warning: Polytope '{name}' missing A or b")
+            continue
+
+        # Convert to numpy arrays
+        try:
+            A = np.array([list(map(float, l.split(","))) for l in A_lines])
+            b = np.array([float(l) for l in b_lines])
+            polytopes.append({"name": name, "A": A, "b": b})
+        except Exception as e:
+            print(f"Error parsing polytope '{name}': {e}")
+            continue
+
+    return polytopes
+
+def choose_polytope(polytopes):
+    """
+    Prompt the user to select one polytope from a list of loaded polytopes.
+
+    Parameters
+    ----------
+    polytopes : list of dict
+        Each dict should have keys: 'name', 'A', 'b'
+
+    Returns
+    -------
+    tuple: (A, b, name)
+        The matrices A, b and the polytope name selected by the user.
+    """
+    if not polytopes:
+        raise ValueError("No polytopes available to choose from!")
+
+    print("\nAvailable polytopes:")
+    for i, p in enumerate(polytopes):
+        print(f"{i+1}. {p['name']}")
+
+    # Ask user until a valid choice is made
+    while True:
+        try:
+            choice = int(input(f"Select a polytope (1-{len(polytopes)}): ").strip())
+            if 1 <= choice <= len(polytopes):
+                selected = polytopes[choice - 1]
+                print(f"\nSelected polytope: {selected['name']}")
+                return selected["A"], selected["b"], selected["name"]
+            else:
+                print(f"Invalid choice. Enter a number between 1 and {len(polytopes)}.")
+        except ValueError:
+            print("Invalid input. Please enter an integer.")
